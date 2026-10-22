@@ -1,93 +1,65 @@
 #include <iostream>
 #include <fstream>
-#include <functional>
+#include <cstdlib>
 #include "llrec.h"
 using namespace std;
 
-/**
- * Reads integers (separated by whitespace) from a file
- * into a linked list.
- *
- * @param[in] filename
- *  The name of the file containing the data to read
- * @return
- *  Pointer to the linked list (or NULL if empty or the
- *  file is invalid)
- */
-Node* readList(const char* filename);
-
-/**
- * Prints the integers in a linked list pointed to
- * by head.
- */
-void print(Node* head);
-
-/**
- * Deallocates the linked list nodes
- */
-void dealloc(Node* head);
-
+Node* readRest(ifstream& ifile)
+{
+    int v;
+    if (!(ifile >> v)) {
+        return NULL;
+    }
+    Node* n = new Node(v, NULL);
+    n->next = readRest(ifile);
+    return n;
+}
 
 Node* readList(const char* filename)
 {
-    Node* h = NULL;
     ifstream ifile(filename);
-    int v;
-    if( ! (ifile >> v) ) return h;
-    h = new Node(v, NULL);
-    Node *t = h;
-    while ( ifile >> v ) {
-        t->next = new Node(v, NULL);
-        t = t->next;
+    return readRest(ifile);
+}
+
+void printRest(Node* head)
+{
+    if (head == NULL) {
+        cout << endl;
+        return;
     }
-    return h;
+    cout << head->val << " ";
+    printRest(head->next);
 }
 
 void print(Node* head)
 {
-    while(head) {
-        cout << head->val << " ";
-        head = head->next;
-    }
-    cout << endl;
+    printRest(head);
 }
 
 void dealloc(Node* head)
 {
-    Node* temp;
-    while(head) {
-        temp = head->next;
-        delete head;
-        head = temp;
+    if (head == NULL) {
+        return;
     }
+    dealloc(head->next);
+    delete head;
 }
 
-// -----------------------------------------------
-//   Add any helper functions or
-//   function object struct declarations
-// -----------------------------------------------
 struct IsOdd {
     bool operator()(int x) { return x % 2 != 0; }
 };
 
-
-
-
 int main(int argc, char* argv[])
 {
-    if(argc < 2) {
+    if (argc < 2) {
         cout << "Please provide an input file" << endl;
         return 1;
     }
 
-    // -----------------------------------------------
-    // Feel free to update any code below this point
-    // -----------------------------------------------
     Node* head = readList(argv[1]);
     cout << "Original list: ";
     print(head);
 
-    // Test out your linked list code
     Node* smaller;
     Node* larger;
     llpivot(head, smaller, larger, 10);
@@ -96,11 +68,8 @@ int main(int argc, char* argv[])
 
     Node* filtered = llfilter(smaller, IsOdd());
     print(filtered);
+
     dealloc(filtered);
     dealloc(larger);
-
-
-    
     return 0;
-
 }
